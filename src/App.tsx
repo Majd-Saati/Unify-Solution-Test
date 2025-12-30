@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from './components/LoadingSpinner';
-import './App.css';
 
 // Lazy load pages for code splitting
 const BikeTheftListPage = lazy(() => import('./pages/BikeTheftListPage'));

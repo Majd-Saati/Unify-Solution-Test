@@ -1,29 +1,36 @@
+import { apiClient } from '../lib/axios';
 import type { BikeSearchResponse } from '../types/bike';
 
-const API_BASE_URL = 'https://bikeindex.org/api/v3';
+export interface FetchBikesParams {
+  distance?: number;
+  page?: number;
+  perPage?: number;
+}
 
 /**
  * Fetches stolen bikes from the Munich area
- * @param distance Distance in miles from Munich (default: 10)
+ * @param params - Search parameters
+ * @param params.distance - Distance in miles from Munich (default: 10)
+ * @param params.page - Page number (default: 1)
+ * @param params.perPage - Number of bikes per page (default: 10)
  * @returns Promise with bike search response
  */
 export async function fetchStolenBikesFromMunich(
-  distance: number = 10
+  params: FetchBikesParams = {}
 ): Promise<BikeSearchResponse> {
+  const { distance = 10, page = 1, perPage = 10 } = params;
+
   // Munich coordinates: 48.1351, 11.5820
-  const params = new URLSearchParams({
-    location: '48.1351,11.5820', // Munich coordinates
-    stolenness: 'proximity',
-    distance: distance.toString(),
-    per_page: '100', // Maximum per page
+  const response = await apiClient.get<BikeSearchResponse>('/search', {
+    params: {
+      location: '48.1351,11.5820', // Munich coordinates
+      stolenness: 'proximity',
+      distance: distance.toString(),
+      page: page.toString(),
+      per_page: perPage.toString(),
+    },
   });
 
-  const response = await fetch(`${API_BASE_URL}/search?${params.toString()}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch bikes: ${response.statusText}`);
-  }
-
-  return response.json();
+  return response.data;
 }
 
