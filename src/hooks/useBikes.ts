@@ -1,11 +1,13 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { fetchStolenBikesFromMunich } from '../services/bikeApi';
+import { fetchStolenBikesFromMunich, fetchStolenBikesCount } from '../services/bikeApi';
 import type { Bike } from '../types/bike';
 
 export const BIKE_QUERY_KEYS = {
   all: ['bikes'] as const,
   stolen: (location: string, distance: number, page: number, perPage: number) =>
     ['bikes', 'stolen', location, distance, page, perPage] as const,
+  count: (location: string, distance: number) =>
+    ['bikes', 'count', location, distance] as const,
 } as const;
 
 interface UseStolenBikesOptions {
@@ -33,6 +35,16 @@ export function useStolenBikes(options: UseStolenBikesOptions = {}) {
     },
     enabled,
     placeholderData: keepPreviousData, // Keep previous data while fetching new page
+  });
+}
+
+export function useStolenBikesCount(options: { distance?: number; enabled?: boolean } = {}) {
+  const { distance = 10, enabled = true } = options;
+
+  return useQuery({
+    queryKey: BIKE_QUERY_KEYS.count('munich', distance),
+    queryFn: () => fetchStolenBikesCount(distance),
+    enabled,
   });
 }
 

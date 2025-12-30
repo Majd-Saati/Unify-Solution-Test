@@ -23,3 +23,10 @@ export interface BikeSearchResponse {
   bikes: Bike[];
 }
 
+export interface BikeCountResponse {
+  non: number;
+  stolen: number;
+  proximity: number;
+  for_sale: number;
+}
+

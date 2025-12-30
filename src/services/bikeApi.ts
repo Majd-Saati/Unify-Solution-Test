@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/axios';
-import type { BikeSearchResponse } from '../types/bike';
+import type { BikeSearchResponse, BikeCountResponse } from '../types/bike';
 
 export interface FetchBikesParams {
   distance?: number;
@@ -28,6 +28,26 @@ export async function fetchStolenBikesFromMunich(
       distance: distance.toString(),
       page: page.toString(),
       per_page: perPage.toString(),
+    },
+  });
+
+  return response.data;
+}
+
+/**
+ * Fetches the count of stolen bikes from the Munich area
+ * @param distance - Distance in miles from Munich (default: 10)
+ * @returns Promise with bike count response
+ */
+export async function fetchStolenBikesCount(
+  distance: number = 10
+): Promise<BikeCountResponse> {
+  const response = await apiClient.get<BikeCountResponse>('/search/count', {
+    params: {
+      query: 'munich',
+      location: 'IP',
+      distance: distance.toString(),
+      stolenness: 'stolen',
     },
   });
 

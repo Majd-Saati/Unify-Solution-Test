@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BikeCard } from '../components/BikeCard';
 import { Pagination } from '../components/Pagination';
-import { useStolenBikes } from '../hooks/useBikes';
+import { useStolenBikes, useStolenBikesCount } from '../hooks/useBikes';
 
 const PER_PAGE = 10;
 
@@ -13,12 +13,17 @@ function BikeTheftListPage() {
     perPage: PER_PAGE,
   });
 
-  // Calculate if there are more pages: if we got full page, there might be more
-  // If we got less than full page, this is the last page
-  const hasMorePages = bikes.length === PER_PAGE;
-  // For pagination display, we'll show current page and allow next if we have more
-  // We'll estimate total pages based on whether we have more data
-  const estimatedTotalPages = hasMorePages ? currentPage + 1 : currentPage;
+  const { data: countData, isLoading: isCountLoading } = useStolenBikesCount({
+    distance: 10,
+  });
+
+  // Calculate total pages based on count
+  const totalCount = countData?.stolen || 0;
+  const totalPages = Math.ceil(totalCount / PER_PAGE);
+  
+  // Calculate showing range
+  const startItem = totalCount > 0 ? (currentPage - 1) * PER_PAGE + 1 : 0;
+  const endItem = Math.min(currentPage * PER_PAGE, totalCount);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -34,7 +39,7 @@ function BikeTheftListPage() {
       </header>
 
       <main className="w-full">
-        {isLoading && (
+        {(isLoading || isCountLoading) && (
           <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
             <div className="w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
             <p className="text-gray-600 text-lg m-0">Loading stolen bike reports...</p>
@@ -53,11 +58,17 @@ function BikeTheftListPage() {
           </div>
         )}
 
-        {!isLoading && !error && (
+        {!isLoading && !isCountLoading && !error && (
           <>
             <div className="text-center text-xl font-semibold text-gray-900 mb-8 py-4 px-4 bg-white rounded-lg shadow-sm">
-              Showing {bikes.length} stolen {bikes.length === 1 ? 'bike' : 'bikes'} 
-              {currentPage > 1 && ` (Page ${currentPage})`}
+              {totalCount > 0 ? (
+                <>
+                  Showing {startItem}-{endItem} of {totalCount} stolen {totalCount === 1 ? 'bike' : 'bikes'}
+                  {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+                </>
+              ) : (
+                'No stolen bikes found in the Munich area'
+              )}
             </div>
             
             {bikes.length === 0 ? (
@@ -72,12 +83,14 @@ function BikeTheftListPage() {
                   ))}
                 </div>
                 
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={estimatedTotalPages}
-                  onPageChange={handlePageChange}
-                  isLoading={isLoading}
-                />
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    isLoading={isLoading}
+                  />
+                )}
               </>
             )}
           </>
