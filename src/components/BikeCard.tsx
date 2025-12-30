@@ -1,4 +1,5 @@
 import type { Bike } from '../types/bike';
+import './BikeCard.css';
 
 interface BikeCardProps {
   bike: Bike;
