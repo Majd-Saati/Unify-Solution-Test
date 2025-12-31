@@ -20,6 +20,7 @@ export function SearchInput({
   const [inputValue, setInputValue] = useState(value);
   const debouncedValue = useDebounce(inputValue, debounceMs);
   const prevExternalValue = useRef(value);
+  const isClearingRef = useRef(false);
 
   // Sync external value changes only when it's a genuine external navigation
   // (e.g., browser back/forward, direct URL change)
@@ -28,24 +29,41 @@ export function SearchInput({
     if (value !== prevExternalValue.current) {
       prevExternalValue.current = value;
       setInputValue(value);
+      // Reset clearing flag when external value changes
+      isClearingRef.current = false;
     }
   }, [value]);
 
   // Trigger onChange when debounced value differs from external value
   useEffect(() => {
+    // Skip if we just cleared - the immediate onChange('') call already handled it
+    if (isClearingRef.current) {
+      return;
+    }
+    
     if (debouncedValue !== value) {
       onChange(debouncedValue);
     }
   }, [debouncedValue, onChange, value]);
 
   const handleInputChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    isClearingRef.current = false; // Reset clearing flag when user types
     setInputValue(e.target.value);
   }, []);
 
   const handleClear = useCallback(() => {
+    // Set clearing flag to prevent debounce effect from interfering
+    isClearingRef.current = true;
+    // Immediately clear both local state and trigger onChange
     setInputValue('');
+    prevExternalValue.current = '';
     onChange('');
-  }, [onChange]);
+    
+    // Reset clearing flag after debounce delay to allow normal operation
+    setTimeout(() => {
+      isClearingRef.current = false;
+    }, debounceMs + 100);
+  }, [onChange, debounceMs]);
 
   const handleSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();

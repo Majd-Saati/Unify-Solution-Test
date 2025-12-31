@@ -51,6 +51,7 @@ export function useBikeTheftData({ currentPage, query = '' }: UseBikeTheftDataOp
     errorMessage,
     handleRetry,
     refetch: bikesQuery.refetch,
+    countData: countQuery.data, // Expose full count response
   };
 }
 

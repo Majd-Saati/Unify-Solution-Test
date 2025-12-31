@@ -1,15 +1,9 @@
-import type { Bike } from '../types/bike';
-import { BikeCard } from '../components/BikeCard';
-import { BikeCardSkeletonList } from '../components/BikeCardSkeletonList';
-import { ErrorDisplay } from '../components/ErrorDisplay';
-import { EmptyState } from '../components/EmptyState';
-import { ResultsSummary } from '../components/ResultsSummary';
-import { Pagination } from '../components/Pagination';
 import { SearchInput } from '../components/SearchInput';
+import { BikeTheftListContent } from '../components/BikeTheftListContent';
+import { TotalCountDisplay } from '../components/TotalCountDisplay';
 import { useBikeTheftData } from '../hooks/useBikeTheftData';
 import { useSearchFilters } from '../hooks/useSearchFilters';
-import { getDataState, handleDataState } from '../utils/stateHandler';
-import { SKELETON_COUNT } from '../constants';
+import { getDataState } from '../utils/stateHandler';
 
 function BikeTheftListPage() {
   const { filters, setQuery, setPage } = useSearchFilters();
@@ -39,39 +33,26 @@ function BikeTheftListPage() {
     <div className="w-full max-w-7xl mx-auto p-8">
       <PageHeader />
       <SearchSection query={query} onQueryChange={setQuery} isLoading={isLoading} />
+      <TotalCountDisplay 
+        totalCount={totalCount} 
+        isLoading={isLoading}
+        searchQuery={query}
+      />
       <main className="w-full">
-        {handleDataState(dataState, {
-          loading: () => <BikeCardSkeletonList count={SKELETON_COUNT} />,
-          error: () => <ErrorDisplay message={errorMessage} onRetry={handleRetry} />,
-          empty: () => <EmptyState searchQuery={query} />,
-          success: () => (
-            <>
-              <ResultsSummary
-                totalCount={totalCount}
-                startItem={startItem}
-                endItem={endItem}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                searchQuery={query}
-              />
-              {hasBikes ? (
-                <>
-                  <BikeList bikes={bikes} />
-                  {totalPages > 0 && (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={setPage}
-                      isLoading={isLoading}
-                    />
-                  )}
-                </>
-              ) : (
-                <EmptyState searchQuery={query} />
-              )}
-            </>
-          ),
-        })}
+        <BikeTheftListContent
+          state={dataState}
+          bikes={bikes}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          startItem={startItem}
+          endItem={endItem}
+          currentPage={currentPage}
+          searchQuery={query}
+          errorMessage={errorMessage}
+          isLoading={isLoading}
+          onRetry={handleRetry}
+          onPageChange={setPage}
+        />
       </main>
     </div>
   );
@@ -102,20 +83,6 @@ function SearchSection({ query, onQueryChange, isLoading }: SearchSectionProps) 
         isLoading={isLoading}
       />
     </section>
-  );
-}
-
-interface BikeListProps {
-  bikes: Bike[];
-}
-
-function BikeList({ bikes }: BikeListProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-      {bikes.map((bike) => (
-        <BikeCard key={bike.id} bike={bike} />
-      ))}
-    </div>
   );
 }
 
